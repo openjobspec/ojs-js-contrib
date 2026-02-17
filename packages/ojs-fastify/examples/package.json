@@ -1,0 +1,19 @@
+{
+  "name": "@openjobspec/fastify-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "server": "tsx server.ts",
+    "worker": "tsx worker.ts"
+  },
+  "dependencies": {
+    "@openjobspec/fastify": "^0.1.0",
+    "@openjobspec/sdk": "^0.1.0",
+    "fastify": "^4.28.0",
+    "fastify-plugin": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
