@@ -1,0 +1,44 @@
+{
+  "name": "@openjobspec/nestjs",
+  "version": "0.1.0",
+  "description": "NestJS module for OpenJobSpec",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["openjobspec", "ojs", "nestjs", "module", "background-jobs", "dependency-injection"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openjobspec/ojs-js-contrib",
+    "directory": "packages/ojs-nestjs"
+  },
+  "homepage": "https://github.com/openjobspec/ojs-js-contrib/tree/main/packages/ojs-nestjs#readme",
+  "bugs": "https://github.com/openjobspec/ojs-js-contrib/issues",
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@openjobspec/sdk": "^0.1.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/testing": "^10.4.0",
+    "@openjobspec/sdk": "^0.1.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "license": "Apache-2.0"
+}
