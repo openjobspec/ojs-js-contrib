@@ -1,0 +1,19 @@
+{
+  "name": "@openjobspec/bullmq-examples",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "before": "tsx before.ts",
+    "after": "tsx after.ts",
+    "worker": "tsx worker.ts"
+  },
+  "dependencies": {
+    "@openjobspec/sdk": "^0.1.0",
+    "@openjobspec/bullmq": "^0.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  }
+}
