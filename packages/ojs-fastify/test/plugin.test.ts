@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('@openjobspec/sdk', () => {
   const OJSClient = vi.fn().mockImplementation((opts: { url: string }) => ({
     url: opts.url,
-    enqueue: vi.fn(),
-    enqueueBatch: vi.fn(),
-    getJob: vi.fn(),
-    cancelJob: vi.fn(),
+    enqueue: vi.fn().mockResolvedValue({ id: 'job-1' }),
+    enqueueBatch: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+    getJob: vi.fn().mockResolvedValue({ id: 'job-1', state: 'completed' }),
+    cancelJob: vi.fn().mockResolvedValue({ id: 'job-1', state: 'cancelled' }),
   }));
   return { OJSClient };
 });
@@ -69,5 +69,42 @@ describe('ojs-fastify plugin', () => {
     expect(ojsPlugin).toBeDefined();
     expect(ojsPluginDefault).toBeDefined();
     expect(ojsPlugin).toBe(ojsPluginDefault);
+  });
+
+  it('makes ojs client accessible in route handlers', async () => {
+    await fastify.register(ojsPlugin, { url: 'http://localhost:8080' });
+
+    let routeOjs: unknown = null;
+    fastify.get('/test', async (request, reply) => {
+      routeOjs = fastify.ojs;
+      return { ok: true };
+    });
+
+    await fastify.ready();
+
+    const response = await fastify.inject({ method: 'GET', url: '/test' });
+
+    expect(response.statusCode).toBe(200);
+    expect(routeOjs).toBeDefined();
+    expect(routeOjs).toBe(fastify.ojs);
+
+    await fastify.close();
+  });
+
+  it('can enqueue a job through the decorated client', async () => {
+    await fastify.register(ojsPlugin, { url: 'http://localhost:8080' });
+    await fastify.ready();
+
+    const result = await fastify.ojs.enqueue('email.send', [{ to: 'user@test.com' }]);
+    expect(result).toEqual({ id: 'job-1' });
+
+    await fastify.close();
+  });
+
+  it('survives close without error', async () => {
+    await fastify.register(ojsPlugin, { url: 'http://localhost:8080' });
+    await fastify.ready();
+
+    await expect(fastify.close()).resolves.toBeUndefined();
   });
 });
