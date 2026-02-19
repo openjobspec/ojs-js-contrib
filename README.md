@@ -10,6 +10,8 @@ Community framework integrations for the [OJS JavaScript SDK](https://github.com
 | alpha  | [NestJS](./packages/ojs-nestjs/README.md) | NestJS module with dependency injection and `@OjsJob()` decorator |
 | alpha  | [Next.js](./packages/ojs-nextjs/README.md) | Next.js Server Actions and Route Handler helpers |
 | alpha  | [Fastify](./packages/ojs-fastify/README.md) | Fastify plugin with decorator-based client access |
+| alpha  | [Cloudflare Workers](./packages/ojs-cloudflare/README.md) | Cloudflare Workers adapter with Queue consumer and Durable Objects |
+| alpha  | [Vercel](./packages/ojs-vercel/README.md) | Vercel Edge/Serverless adapter with KV caching |
 | alpha  | [BullMQ](./packages/ojs-bullmq/README.md) | BullMQ-compatible API adapter for seamless migration |
 
 Status definitions: `alpha` (API may change), `beta` (API stable, not battle-tested), `stable` (production-ready).
