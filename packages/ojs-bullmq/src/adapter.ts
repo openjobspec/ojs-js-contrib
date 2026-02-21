@@ -126,3 +126,4 @@ export class Worker {
     await this.worker.stop();
   }
 }
+
