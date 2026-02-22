@@ -24,3 +24,4 @@ export class OjsService implements OnModuleInit, OnModuleDestroy {
     await this.worker.stop();
   }
 }
+
