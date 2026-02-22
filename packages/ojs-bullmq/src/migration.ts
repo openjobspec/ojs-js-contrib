@@ -51,3 +51,4 @@ export function migrateJobDefinition(bullJob: BullMQJobDefinition): OjsJobDefini
 export function migrateBulk(bullJobs: BullMQJobDefinition[]): OjsJobDefinition[] {
   return bullJobs.map(migrateJobDefinition);
 }
+
