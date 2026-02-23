@@ -11,13 +11,22 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["openjobspec", "ojs", "nestjs", "module", "background-jobs", "dependency-injection"],
+  "keywords": [
+    "openjobspec",
+    "ojs",
+    "nestjs",
+    "module",
+    "background-jobs",
+    "dependency-injection"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/openjobspec/ojs-js-contrib",
@@ -40,5 +49,8 @@
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
 }

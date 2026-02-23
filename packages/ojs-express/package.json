@@ -11,13 +11,21 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["openjobspec", "ojs", "express", "middleware", "background-jobs"],
+  "keywords": [
+    "openjobspec",
+    "ojs",
+    "express",
+    "middleware",
+    "background-jobs"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/openjobspec/ojs-js-contrib",
@@ -36,5 +44,8 @@
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
 }
