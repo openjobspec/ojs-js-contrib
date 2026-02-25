@@ -30,3 +30,4 @@ process.on('SIGINT', async () => {
 
 console.log('Starting OJS worker...');
 await worker.start();
+
