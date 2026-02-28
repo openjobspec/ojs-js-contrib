@@ -25,11 +25,11 @@
   "homepage": "https://github.com/openjobspec/ojs-js-contrib/tree/main/packages/ojs-nextjs#readme",
   "bugs": "https://github.com/openjobspec/ojs-js-contrib/issues",
   "peerDependencies": {
-    "@openjobspec/sdk": "^0.1.0",
+    "@openjobspec/sdk": "^0.2.0",
     "next": "^14.0.0 || ^15.0.0"
   },
   "devDependencies": {
-    "@openjobspec/sdk": "^0.1.0",
+    "@openjobspec/sdk": "^0.2.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
