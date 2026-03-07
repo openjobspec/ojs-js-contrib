@@ -62,3 +62,4 @@ export class OjsService implements OnModuleInit, OnModuleDestroy {
     return this.running && !this.shuttingDown;
   }
 }
+
