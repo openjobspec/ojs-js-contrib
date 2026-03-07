@@ -40,3 +40,4 @@ process.on('SIGINT', async () => {
   await worker.close();
   process.exit(0);
 });
+
