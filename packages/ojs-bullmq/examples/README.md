@@ -41,4 +41,3 @@ npm run after
 ```bash
 docker compose down
 ```
-
