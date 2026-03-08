@@ -44,3 +44,4 @@ npm start
 ```
 
 The NestJS app uses `OjsService.client` to enqueue jobs and `OjsService.worker` to process them, both communicating with the OJS server over HTTP.
+
