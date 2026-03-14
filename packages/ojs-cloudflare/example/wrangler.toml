@@ -1,0 +1,7 @@
+name = "ojs-cloudflare-example"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+OJS_URL = "http://localhost:8080"

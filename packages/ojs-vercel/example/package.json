@@ -1,0 +1,18 @@
+{
+  "name": "@openjobspec/vercel-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel"
+  },
+  "dependencies": {
+    "@openjobspec/sdk": "^0.2.0",
+    "@openjobspec/vercel": "^0.2.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0",
+    "typescript": "^5.4.0"
+  }
+}
