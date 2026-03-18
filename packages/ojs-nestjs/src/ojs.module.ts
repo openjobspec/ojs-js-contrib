@@ -12,7 +12,7 @@ export class OjsModule {
         { provide: OJS_MODULE_OPTIONS, useValue: options },
         OjsService,
       ],
-      exports: [OjsService],
+      exports: [OjsService, OJS_MODULE_OPTIONS],
     };
 
     if (options.isGlobal) {
@@ -34,7 +34,7 @@ export class OjsModule {
         },
         OjsService,
       ],
-      exports: [OjsService],
+      exports: [OjsService, OJS_MODULE_OPTIONS],
     };
 
     if (options.isGlobal) {

@@ -1,18 +1,34 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+const mockEnqueueBatch = vi.fn().mockResolvedValue([
+  { id: 'job-1', type: 'email.send', state: 'available' },
+  { id: 'job-2', type: 'email.send', state: 'available' },
+]);
+const mockHealth = vi.fn().mockResolvedValue({ status: 'ok' });
+const mockEnqueueWorkflow = vi.fn().mockResolvedValue({ id: 'wf-1', type: 'chain', state: 'running' });
+
 vi.mock('@openjobspec/sdk', () => {
   const OJSClient = vi.fn().mockImplementation((opts: { url: string }) => ({
     url: opts.url,
     enqueue: vi.fn().mockResolvedValue({ id: 'job-1', type: 'email.send', state: 'available' }),
-    enqueueBatch: vi.fn(),
+    enqueueBatch: mockEnqueueBatch,
     getJob: vi.fn().mockResolvedValue({ id: 'job-1', type: 'email.send', state: 'completed' }),
     cancelJob: vi.fn().mockResolvedValue({ id: 'job-1', type: 'email.send', state: 'cancelled' }),
+    health: mockHealth,
+    workflow: mockEnqueueWorkflow,
   }));
-  return { OJSClient };
+  const chain = vi.fn().mockImplementation((...steps: unknown[]) => ({
+    type: 'chain',
+    steps,
+  }));
+  return { OJSClient, chain };
 });
 
 import { OJSClient } from '@openjobspec/sdk';
-import { configureOjs, getOjsClient, enqueueJob, getJob, cancelJob } from '../src/server.js';
+import {
+  configureOjs, getOjsClient, enqueueJob, getJob, cancelJob,
+  enqueueJobBatch, checkHealth, createWorkflow,
+} from '../src/server.js';
 
 describe('ojs-nextjs server helpers', () => {
   beforeEach(() => {
@@ -103,6 +119,65 @@ describe('ojs-nextjs server helpers', () => {
 
     expect(client1).not.toBe(client2);
     expect(client2.url).toBe('http://new-server:9090');
+  });
+
+  it('enqueueJobBatch delegates to client.enqueueBatch', async () => {
+    const jobs = await enqueueJobBatch([
+      { type: 'email.send', args: [{ to: 'a@b.com' }] },
+      { type: 'email.send', args: [{ to: 'c@d.com' }], options: { queue: 'bulk' } },
+    ]);
+
+    expect(mockEnqueueBatch).toHaveBeenCalled();
+    expect(jobs).toHaveLength(2);
+    expect(jobs[0].id).toBe('job-1');
+    expect(jobs[1].id).toBe('job-2');
+  });
+
+  it('enqueueJobBatch spreads options into each job spec', async () => {
+    await enqueueJobBatch([
+      { type: 'email.send', args: ['arg1'], options: { queue: 'fast', priority: 10 } },
+    ]);
+
+    expect(mockEnqueueBatch).toHaveBeenCalledWith([
+      { type: 'email.send', args: ['arg1'], queue: 'fast', priority: 10 },
+    ]);
+  });
+
+  it('checkHealth delegates to client.health', async () => {
+    const result = await checkHealth();
+
+    expect(mockHealth).toHaveBeenCalled();
+    expect(result).toEqual({ status: 'ok' });
+  });
+
+  it('createWorkflow builds a chain and enqueues it', async () => {
+    const steps = [
+      { type: 'order.validate', args: ['order-1'] },
+      { type: 'payment.charge', args: ['order-1'] },
+      { type: 'email.receipt', args: ['order-1'] },
+    ];
+
+    const workflow = await createWorkflow(steps);
+
+    expect(mockEnqueueWorkflow).toHaveBeenCalled();
+    expect(workflow.id).toBe('wf-1');
+    expect(workflow.type).toBe('chain');
+  });
+
+  it('createWorkflow passes options through', async () => {
+    const steps = [
+      { type: 'step1', args: ['a'], options: { queue: 'high' } },
+      { type: 'step2', args: ['b'] },
+    ];
+
+    await createWorkflow(steps);
+
+    // chain() should have been called with spread options
+    const { chain } = await import('@openjobspec/sdk');
+    expect(chain).toHaveBeenCalledWith(
+      { type: 'step1', args: ['a'], queue: 'high' },
+      { type: 'step2', args: ['b'] },
+    );
   });
 });
 

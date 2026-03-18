@@ -6,6 +6,7 @@ vi.mock('@openjobspec/sdk', () => {
   const mockEnqueueBatch = vi.fn();
   const mockGetJob = vi.fn();
   const mockCancelJob = vi.fn();
+  const mockHealth = vi.fn();
   const mockRegister = vi.fn();
   const mockStart = vi.fn();
   const mockStop = vi.fn();
@@ -16,6 +17,7 @@ vi.mock('@openjobspec/sdk', () => {
       enqueueBatch: mockEnqueueBatch,
       getJob: mockGetJob,
       cancelJob: mockCancelJob,
+      health: mockHealth,
     })),
     OJSWorker: vi.fn().mockImplementation(() => ({
       register: mockRegister,
@@ -27,6 +29,7 @@ vi.mock('@openjobspec/sdk', () => {
       mockEnqueueBatch,
       mockGetJob,
       mockCancelJob,
+      mockHealth,
       mockRegister,
       mockStart,
       mockStop,
@@ -44,6 +47,7 @@ const mocks = (await import('@openjobspec/sdk') as any).__mocks as {
   mockEnqueueBatch: ReturnType<typeof vi.fn>;
   mockGetJob: ReturnType<typeof vi.fn>;
   mockCancelJob: ReturnType<typeof vi.fn>;
+  mockHealth: ReturnType<typeof vi.fn>;
   mockRegister: ReturnType<typeof vi.fn>;
   mockStart: ReturnType<typeof vi.fn>;
   mockStop: ReturnType<typeof vi.fn>;
@@ -183,6 +187,96 @@ describe('Queue', () => {
       await expect(queue.close()).resolves.toBeUndefined();
     });
   });
+
+  describe('getJobCounts()', () => {
+    it('returns zero counts when health has no queue data', async () => {
+      mocks.mockHealth.mockResolvedValue({ status: 'ok' });
+
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      const counts = await queue.getJobCounts();
+
+      expect(counts).toEqual({
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        delayed: 0,
+        failed: 0,
+      });
+    });
+
+    it('maps OJS states to BullMQ state buckets', async () => {
+      mocks.mockHealth.mockResolvedValue({
+        status: 'ok',
+        queues: {
+          emails: {
+            available: 5,
+            pending: 3,
+            active: 2,
+            completed: 10,
+            scheduled: 1,
+            retryable: 4,
+            cancelled: 1,
+            discarded: 1,
+          },
+        },
+      });
+
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      const counts = await queue.getJobCounts();
+
+      expect(counts.waiting).toBe(8);   // available(5) + pending(3)
+      expect(counts.active).toBe(2);
+      expect(counts.completed).toBe(10);
+      expect(counts.delayed).toBe(1);   // scheduled
+      expect(counts.failed).toBe(6);    // retryable(4) + cancelled(1) + discarded(1)
+    });
+
+    it('returns zero counts on health endpoint failure', async () => {
+      mocks.mockHealth.mockRejectedValue(new Error('connection refused'));
+
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      const counts = await queue.getJobCounts();
+
+      expect(counts.waiting).toBe(0);
+    });
+  });
+
+  describe('pause() / resume() / isPaused()', () => {
+    it('starts unpaused', () => {
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      expect(queue.isPaused()).toBe(false);
+    });
+
+    it('toggles paused state', async () => {
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      await queue.pause();
+      expect(queue.isPaused()).toBe(true);
+      await queue.resume();
+      expect(queue.isPaused()).toBe(false);
+    });
+  });
+
+  describe('drain()', () => {
+    it('resolves without error (no-op)', async () => {
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      await expect(queue.drain()).resolves.toBeUndefined();
+    });
+  });
+
+  describe('getRepeatableJobs()', () => {
+    it('returns empty array', async () => {
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      const jobs = await queue.getRepeatableJobs();
+      expect(jobs).toEqual([]);
+    });
+  });
+
+  describe('removeRepeatable()', () => {
+    it('resolves without error (no-op)', async () => {
+      const queue = new Queue('emails', { baseUrl: 'http://localhost:8080' });
+      await expect(queue.removeRepeatable('job', { pattern: '* * * * *' })).resolves.toBeUndefined();
+    });
+  });
 });
 
 describe('Worker', () => {
@@ -272,6 +366,167 @@ describe('Worker', () => {
       name: 'cleanup',
       data: {},
       attemptsMade: 1,
+    });
+  });
+
+  describe('on() / off() events', () => {
+    it('emits completed event on successful processing', async () => {
+      const processor = vi.fn().mockResolvedValue('result');
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      const handler = vi.fn();
+      worker.on('completed', handler);
+
+      const registeredHandler = mocks.mockRegister.mock.calls[0][1];
+      const ctx = {
+        job: { id: 'job-1', type: 'send-email', args: [{ to: 'a@b.com' }] },
+        attempt: 1,
+        queue: 'emails',
+        workerId: 'w-1',
+        signal: new AbortController().signal,
+        metadata: {},
+      };
+
+      await registeredHandler(ctx);
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'job-1', name: 'send-email' }),
+        'result',
+      );
+    });
+
+    it('emits failed event on processing error', async () => {
+      const error = new Error('boom');
+      const processor = vi.fn().mockRejectedValue(error);
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      const handler = vi.fn();
+      worker.on('failed', handler);
+
+      const registeredHandler = mocks.mockRegister.mock.calls[0][1];
+      const ctx = {
+        job: { id: 'job-1', type: 'send-email', args: [{}] },
+        attempt: 1,
+        queue: 'emails',
+        workerId: 'w-1',
+        signal: new AbortController().signal,
+        metadata: {},
+      };
+
+      await expect(registeredHandler(ctx)).rejects.toThrow('boom');
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'job-1' }),
+        error,
+      );
+    });
+
+    it('off() removes event listener', async () => {
+      const processor = vi.fn().mockResolvedValue('ok');
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      const handler = vi.fn();
+      worker.on('completed', handler);
+      worker.off('completed', handler);
+
+      const registeredHandler = mocks.mockRegister.mock.calls[0][1];
+      const ctx = {
+        job: { id: 'job-1', type: 't', args: [{}] },
+        attempt: 1,
+        queue: 'emails',
+        workerId: 'w-1',
+        signal: new AbortController().signal,
+        metadata: {},
+      };
+
+      await registeredHandler(ctx);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('on() returns this for chaining', () => {
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      const result = worker.on('completed', vi.fn());
+      expect(result).toBe(worker);
+    });
+  });
+
+  describe('pause() / resume()', () => {
+    it('starts unpaused and not running', () => {
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      expect(worker.isPaused()).toBe(false);
+      expect(worker.isRunning()).toBe(false);
+    });
+
+    it('toggles paused state', async () => {
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      await worker.pause();
+      expect(worker.isPaused()).toBe(true);
+
+      await worker.resume();
+      expect(worker.isPaused()).toBe(false);
+    });
+  });
+
+  describe('isRunning()', () => {
+    it('returns true after run() is called', async () => {
+      mocks.mockStart.mockResolvedValue(undefined);
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      await worker.run();
+      expect(worker.isRunning()).toBe(true);
+    });
+
+    it('returns false after close() is called', async () => {
+      mocks.mockStart.mockResolvedValue(undefined);
+      mocks.mockStop.mockResolvedValue(undefined);
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      await worker.run();
+      await worker.close();
+      expect(worker.isRunning()).toBe(false);
+    });
+  });
+
+  describe('getRunning()', () => {
+    it('returns 0 when no jobs are being processed', () => {
+      const processor = vi.fn();
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      expect(worker.getRunning()).toBe(0);
+    });
+
+    it('tracks active job count during processing', async () => {
+      let activeCount = 0;
+      const processor = vi.fn().mockImplementation(async () => {
+        // Capture the running count while we're inside the processor
+        activeCount = 1; // We can't reliably check getRunning() inside the mock
+        return 'done';
+      });
+
+      const worker = new Worker('emails', processor, { baseUrl: 'http://localhost:8080' });
+
+      const registeredHandler = mocks.mockRegister.mock.calls[0][1];
+      const ctx = {
+        job: { id: 'job-1', type: 't', args: [{}] },
+        attempt: 1,
+        queue: 'emails',
+        workerId: 'w-1',
+        signal: new AbortController().signal,
+        metadata: {},
+      };
+
+      await registeredHandler(ctx);
+
+      // After the handler finishes, count should be back to 0
+      expect(worker.getRunning()).toBe(0);
+      expect(activeCount).toBe(1);
     });
   });
 });

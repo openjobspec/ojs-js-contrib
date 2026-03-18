@@ -8,7 +8,10 @@
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./server": { "types": "./dist/server.d.ts", "default": "./dist/server.js" },
-    "./client": { "types": "./dist/client.d.ts", "default": "./dist/client.js" }
+    "./client": { "types": "./dist/client.d.ts", "default": "./dist/client.js" },
+    "./routes": { "types": "./dist/routes.d.ts", "default": "./dist/routes.js" },
+    "./worker": { "types": "./dist/worker.d.ts", "default": "./dist/worker.js" },
+    "./middleware": { "types": "./dist/middleware.d.ts", "default": "./dist/middleware.js" }
   },
   "files": ["dist"],
   "scripts": {

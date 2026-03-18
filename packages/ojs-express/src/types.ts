@@ -1,8 +1,10 @@
 import type { Request } from 'express';
-import type { OJSClient, OJSWorker } from '@openjobspec/sdk';
+import type { OJSClient } from '@openjobspec/sdk';
+import type { OjsWorkflowHelpers } from './workflow.js';
 
 export interface OjsRequest extends Request {
   ojs: OJSClient;
+  ojsWorkflow?: OjsWorkflowHelpers;
 }
 
 export interface OjsMiddlewareOptions {
@@ -39,3 +41,19 @@ export interface OjsAppOptions extends OjsMiddlewareOptions {
   worker?: OjsWorkerOptions;
   handlers?: JobHandlerDefinition[];
 }
+
+/** A workflow step definition used by the workflow middleware and router. */
+export interface WorkflowStep {
+  type: string;
+  args: unknown[];
+  options?: Record<string, unknown>;
+}
+
+/** Options for creating a workflow router. */
+export { type OjsWorkflowRouterOptions } from './workflow.js';
+
+/** Health check options. */
+export { type OjsHealthOptions } from './health.js';
+
+/** Event emitter options and data types. */
+export { type OjsEventOptions, type OjsEventData, type OjsEventEmitter } from './events.js';

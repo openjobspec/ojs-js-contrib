@@ -1,6 +1,20 @@
 export { ojsMiddleware, ojsErrorHandler, createOjsClient } from './middleware.js';
 export { OjsWorkerManager, createOjsWorker } from './worker.js';
-export type { OjsRequest, OjsMiddlewareOptions, OjsWorkerOptions, JobHandlerDefinition, JobContext, OjsAppOptions } from './types.js';
+export { createWorkflowRouter, ojsWorkflowMiddleware } from './workflow.js';
+export type { OjsWorkflowHelpers, OjsWorkflowRouterOptions } from './workflow.js';
+export { createHealthRouter, ojsHealthCheck } from './health.js';
+export type { OjsHealthOptions } from './health.js';
+export { createOjsEventEmitter, ojsEventStream } from './events.js';
+export type { OjsEventOptions, OjsEventData, OjsEventEmitter } from './events.js';
+export type {
+  OjsRequest,
+  OjsMiddlewareOptions,
+  OjsWorkerOptions,
+  JobHandlerDefinition,
+  JobContext,
+  OjsAppOptions,
+  WorkflowStep,
+} from './types.js';
 
 import { ojsMiddleware } from './middleware.js';
 import type { OjsMiddlewareOptions } from './types.js';

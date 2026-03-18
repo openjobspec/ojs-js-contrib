@@ -5,6 +5,20 @@ export type { OjsJobOptions } from './ojs.decorator.js';
 export type { OjsModuleOptions, OjsModuleAsyncOptions } from './ojs.interfaces.js';
 export { OJS_MODULE_OPTIONS, OJS_JOB_METADATA } from './ojs.interfaces.js';
 
+// Workflow
+export { OjsWorkflowModule } from './ojs-workflow.module.js';
+export { OjsWorkflowService } from './ojs-workflow.service.js';
+export type { WorkflowStep, WorkflowResult, JsonValue } from './ojs-workflow.service.js';
+
+// Events
+export { OjsEventModule } from './ojs-event.module.js';
+export { OjsEventService } from './ojs-event.service.js';
+export type { OjsEventType, OjsEvent, OjsEventHandler } from './ojs-event.service.js';
+
+// Health
+export { OjsHealthIndicator } from './ojs.health.js';
+export type { OjsHealthResult } from './ojs.health.js';
+
 import { Inject } from '@nestjs/common';
 import { SetMetadata } from '@nestjs/common';
 import { OJS_MODULE_OPTIONS, OJS_JOB_METADATA } from './ojs.interfaces.js';
