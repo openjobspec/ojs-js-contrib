@@ -1,0 +1,47 @@
+{
+  "name": "@openjobspec/mastra",
+  "version": "0.1.0",
+  "description": "Mastra adapter for OpenJobSpec — durable workflows and agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "openjobspec",
+    "ojs",
+    "mastra",
+    "durable-workflows",
+    "ai-agents",
+    "background-jobs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openjobspec/ojs-js-contrib",
+    "directory": "packages/ojs-mastra"
+  },
+  "homepage": "https://github.com/openjobspec/ojs-js-contrib/tree/main/packages/ojs-mastra#readme",
+  "bugs": "https://github.com/openjobspec/ojs-js-contrib/issues",
+  "peerDependencies": {
+    "@openjobspec/sdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "@openjobspec/sdk": "^0.2.0",
+    "typescript": "^5.4.0"
+  },
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}

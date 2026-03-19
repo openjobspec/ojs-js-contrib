@@ -1,4 +1,5 @@
 # Open Job Spec — JavaScript/TypeScript Contrib
+[![Stability: beta](https://img.shields.io/badge/stability-beta-yellow.svg)](https://github.com/openjobspec/openjobspec/blob/main/STABILITY.md)
 
 Community framework integrations for the [OJS JavaScript SDK](https://github.com/openjobspec/ojs-js-sdk).
 
