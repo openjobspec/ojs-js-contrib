@@ -1,9 +1,7 @@
 import { Injectable, Inject, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 import { OJSClient, OJSWorker } from '@openjobspec/sdk';
 import type { OjsModuleOptions } from './ojs.interfaces.js';
-import { OJS_MODULE_OPTIONS, OJS_JOB_METADATA } from './ojs.interfaces.js';
-import type { OjsJobOptions } from './ojs.decorator.js';
+import { OJS_MODULE_OPTIONS } from './ojs.interfaces.js';
 
 @Injectable()
 export class OjsService implements OnModuleInit, OnModuleDestroy {
@@ -14,7 +12,6 @@ export class OjsService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject(OJS_MODULE_OPTIONS) private readonly options: OjsModuleOptions,
-    private readonly reflector: Reflector,
   ) {
     this.client = new OJSClient({ url: options.baseUrl });
     this.worker = new OJSWorker({
