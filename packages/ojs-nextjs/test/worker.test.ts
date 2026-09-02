@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockGetJob = vi.fn().mockResolvedValue({ id: 'job-1', type: 'email.send', state: 'active' });
 
@@ -190,5 +190,46 @@ describe('createJobProcessor', () => {
     const res = await processor.handler(req);
     expect(res.status).toBe(200);
     expect(customGetJob).toHaveBeenCalledWith('j1');
+  });
+});
+
+describe('createJobProcessor — timeout handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('clears the timeout timer after a job completes successfully', async () => {
+    const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const processor = createJobProcessor({ baseUrl: 'http://localhost:8080' });
+    processor.register('fast.job', async () => 'done');
+
+    const req = makeRequest({ id: 'job-1', type: 'fast.job', args: [], attempt: 1 });
+    const res = await processor.handler(req);
+
+    expect(res.status).toBe(200);
+    // The dangling-timer fix: the race timeout must be cleared once the job settles.
+    expect(clearSpy).toHaveBeenCalled();
+  });
+
+  it('returns 500 with a max-duration message when a job exceeds maxDuration', async () => {
+    const processor = createJobProcessor({ baseUrl: 'http://localhost:8080', maxDuration: 1000 });
+    // Handler never resolves, forcing the timeout branch to win the race.
+    processor.register('slow.job', () => new Promise<never>(() => {}));
+
+    const req = makeRequest({ id: 'job-1', type: 'slow.job', args: [], attempt: 1 });
+    const pending = processor.handler(req);
+
+    await vi.advanceTimersByTimeAsync(1000);
+    const res = await pending;
+
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.success).toBe(false);
+    expect(data.error).toContain('exceeded max duration');
   });
 });
