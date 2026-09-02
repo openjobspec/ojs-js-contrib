@@ -124,7 +124,7 @@ export class OjsCloudflareWorker {
     return {
       fetch: (request: Request, env: OjsEnv, ctx: ExecutionContext) =>
         this.handleFetch(request, env, ctx),
-      queue: (batch: MessageBatch<string>, env: OjsEnv, ctx: ExecutionContext) =>
+      queue: (batch: MessageBatch<unknown>, env: OjsEnv, ctx: ExecutionContext) =>
         this.handleQueue(batch, env, ctx),
     };
   }
@@ -181,7 +181,7 @@ export class OjsCloudflareWorker {
    * Each message body should be a JSON-serialized JobEvent.
    */
   async handleQueue(
-    batch: MessageBatch<string>,
+    batch: MessageBatch<unknown>,
     env: OjsEnv,
     ctx: ExecutionContext,
   ): Promise<void> {
