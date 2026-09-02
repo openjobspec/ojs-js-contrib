@@ -48,7 +48,7 @@ const ojsRequestContextPlugin: FastifyPluginAsync<OjsRequestContextOptions> = as
   const correlationHeader = options.correlationHeader ?? 'x-correlation-id';
 
   // Decorate request with a placeholder so Fastify knows the shape
-  fastify.decorateRequest('ojsContext', null);
+  fastify.decorateRequest('ojsContext');
 
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
     const client = fastify.ojs;

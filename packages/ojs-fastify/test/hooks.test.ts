@@ -153,7 +153,7 @@ describe('ojs-fastify hooks', () => {
       await fastify.ready();
 
       await fastify.inject({ method: 'GET', url: '/test' });
-      expect(trackedJobs).toBeNull();
+      expect(trackedJobs).toBeUndefined();
 
       await fastify.close();
     });
