@@ -200,11 +200,16 @@ describe('useJobStatus', () => {
     expect(typeof clientModule.useJobStatus).toBe('function');
   });
 
-  it('TERMINAL_STATES includes completed, cancelled, and discarded', async () => {
-    // Test the logic indirectly by examining the module's behavior constants
+  it('treats completed, cancelled, and discarded as terminal states', async () => {
     const clientModule = await import('../src/client.js');
-    // The hook exists and is a function with correct arity (3 params)
-    expect(clientModule.useJobStatus.length).toBe(3);
+    // isTerminalState encodes the TERMINAL_STATES contract; verify membership
+    // directly rather than relying on the hook's (default-argument) arity.
+    expect(clientModule.isTerminalState('completed')).toBe(true);
+    expect(clientModule.isTerminalState('cancelled')).toBe(true);
+    expect(clientModule.isTerminalState('discarded')).toBe(true);
+    expect(clientModule.isTerminalState('active')).toBe(false);
+    expect(clientModule.isTerminalState('available')).toBe(false);
+    expect(clientModule.isTerminalState('pending')).toBe(false);
   });
 
   it('exports JobStatus and UseJobStatusOptions types', async () => {
