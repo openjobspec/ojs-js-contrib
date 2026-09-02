@@ -224,6 +224,9 @@ export function createOjsRouteHandlers(options: OjsRouteHandlerOptions = {}): {
       }
       const client = resolveClient();
       const job = await client.enqueue(body.type, body.args ?? [], body.options);
+      if (job === null) {
+        return new Response(null, { status: 204 });
+      }
       return jsonResponse(job, 201);
     }
 
