@@ -10,6 +10,16 @@ export interface OjsWorkflowRouterOptions {
   prefix?: string;
 }
 
+/** Parsed request body accepted by the workflow router endpoints. */
+interface WorkflowRequestBody {
+  steps: WorkflowStep[];
+  callbacks?: {
+    on_complete?: WorkflowStep;
+    on_success?: WorkflowStep;
+    on_failure?: WorkflowStep;
+  };
+}
+
 /** Workflow helpers attached to req.ojsWorkflow by the middleware. */
 export interface OjsWorkflowHelpers {
   /**
@@ -110,61 +120,43 @@ export function createWorkflowRouter(options?: OjsWorkflowRouterOptions): Router
   const prefix = options?.prefix ?? '/ojs/workflows';
   const router = Router();
 
-  router.post(`${prefix}/chain`, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const client = getClient(req);
-      const { steps } = req.body as { steps: WorkflowStep[] };
-      if (!Array.isArray(steps) || steps.length === 0) {
-        res.status(400).json({ error: 'steps must be a non-empty array' });
-        return;
+  const workflowRoute = (
+    run: (helpers: OjsWorkflowHelpers, body: WorkflowRequestBody) => Promise<unknown>,
+    validate?: (body: WorkflowRequestBody) => string | null,
+  ): RequestHandler => {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        const helpers = buildWorkflowHelpers(getClient(req));
+        const body = (req.body ?? {}) as WorkflowRequestBody;
+        if (!Array.isArray(body.steps) || body.steps.length === 0) {
+          res.status(400).json({ error: 'steps must be a non-empty array' });
+          return;
+        }
+        const validationError = validate?.(body);
+        if (validationError) {
+          res.status(400).json({ error: validationError });
+          return;
+        }
+        const result = await run(helpers, body);
+        res.status(201).json(result);
+      } catch (err) {
+        next(err);
       }
-      const definition = chain(...stepsToJobSpecs(steps));
-      const result = await client.workflow(definition);
-      res.status(201).json(result);
-    } catch (err) {
-      next(err);
-    }
-  });
+    };
+  };
 
-  router.post(`${prefix}/group`, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const client = getClient(req);
-      const { steps } = req.body as { steps: WorkflowStep[] };
-      if (!Array.isArray(steps) || steps.length === 0) {
-        res.status(400).json({ error: 'steps must be a non-empty array' });
-        return;
-      }
-      const definition = group(...stepsToJobSpecs(steps));
-      const result = await client.workflow(definition);
-      res.status(201).json(result);
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  router.post(`${prefix}/batch`, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const client = getClient(req);
-      const { steps, callbacks } = req.body as { steps: WorkflowStep[]; callbacks: Record<string, WorkflowStep> };
-      if (!Array.isArray(steps) || steps.length === 0) {
-        res.status(400).json({ error: 'steps must be a non-empty array' });
-        return;
-      }
-      if (!callbacks || typeof callbacks !== 'object') {
-        res.status(400).json({ error: 'callbacks must be an object with on_complete, on_success, or on_failure' });
-        return;
-      }
-      const batchCallbacks: BatchCallbacks = {};
-      if (callbacks.on_complete) batchCallbacks.on_complete = stepToJobSpec(callbacks.on_complete);
-      if (callbacks.on_success) batchCallbacks.on_success = stepToJobSpec(callbacks.on_success);
-      if (callbacks.on_failure) batchCallbacks.on_failure = stepToJobSpec(callbacks.on_failure);
-      const definition = batch(stepsToJobSpecs(steps), batchCallbacks);
-      const result = await client.workflow(definition);
-      res.status(201).json(result);
-    } catch (err) {
-      next(err);
-    }
-  });
+  router.post(`${prefix}/chain`, workflowRoute((helpers, body) => helpers.chain(body.steps)));
+  router.post(`${prefix}/group`, workflowRoute((helpers, body) => helpers.group(body.steps)));
+  router.post(
+    `${prefix}/batch`,
+    workflowRoute(
+      (helpers, body) => helpers.batch(body.steps, body.callbacks ?? {}),
+      (body) =>
+        !body.callbacks || typeof body.callbacks !== 'object'
+          ? 'callbacks must be an object with on_complete, on_success, or on_failure'
+          : null,
+    ),
+  );
 
   return router;
 }
