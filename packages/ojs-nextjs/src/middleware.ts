@@ -9,6 +9,25 @@ export interface OjsMiddlewareConfig {
 }
 
 /**
+ * Generate a request-correlation id. Prefers the Web Crypto global, which is
+ * available in the Edge runtime (where Next.js middleware runs) and in
+ * Node >= 20; falls back to a self-contained RFC 4122 v4 generator on bare
+ * Node 18 runtimes that do not expose `globalThis.crypto`. Intentionally does
+ * not import `node:crypto` so the Edge bundle boundary is preserved.
+ */
+function generateRequestId(): string {
+  const webCrypto = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (typeof webCrypto?.randomUUID === 'function') {
+    return webCrypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const rand = (Math.random() * 16) | 0;
+    const value = char === 'x' ? rand : (rand & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+/**
  * Creates a Next.js middleware that injects OJS context into matched requests.
  * Adds OJS-specific headers for request correlation and tracing.
  *
@@ -61,7 +80,7 @@ export function createOjsMiddleware(
     }
 
     // Add correlation headers to the request
-    const requestId = crypto.randomUUID();
+    const requestId = generateRequestId();
     const timestamp = new Date().toISOString();
 
     const headers = new Headers(request.headers);
