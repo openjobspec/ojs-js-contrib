@@ -102,6 +102,7 @@ export function createJobProcessor(options: OjsNextWorkerOptions = {}): {
 
     const timeoutMs = options.maxDuration ?? 30_000;
     const client = resolveClient();
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
     try {
       const resultPromise = jobHandler({
@@ -112,7 +113,7 @@ export function createJobProcessor(options: OjsNextWorkerOptions = {}): {
       });
 
       const timeoutPromise = new Promise<never>((_resolve, reject) => {
-        setTimeout(
+        timeoutHandle = setTimeout(
           () => reject(new Error(`Job exceeded max duration of ${timeoutMs}ms`)),
           timeoutMs,
         );
@@ -148,6 +149,12 @@ export function createJobProcessor(options: OjsNextWorkerOptions = {}): {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
+    } finally {
+      // Always clear the timeout so a completed/failed job never leaves a
+      // dangling timer that could keep a serverless instance alive.
+      if (timeoutHandle !== undefined) {
+        clearTimeout(timeoutHandle);
+      }
     }
   }
 
