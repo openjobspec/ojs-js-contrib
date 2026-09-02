@@ -62,6 +62,30 @@ export class MastraAdapter {
   }
 
   /**
+   * Enqueue a durable job on the OJS server. Shared by the workflow and agent
+   * wrappers, which differ only in their handler bodies, not their transport.
+   */
+  private async enqueueJob(
+    jobType: string,
+    input: Record<string, unknown>,
+  ): Promise<{ jobId: string }> {
+    const resp = await fetch(`${this.config.serverUrl}/api/v1/jobs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: jobType,
+        args: [input],
+        queue: this.config.defaultQueue,
+      }),
+    });
+    if (!resp.ok) {
+      throw new Error(`OJS enqueue failed: ${resp.status} ${resp.statusText}`);
+    }
+    const data = (await resp.json()) as { job: { id: string } };
+    return { jobId: data.job.id };
+  }
+
+  /**
    * Wraps a Mastra workflow as a durable OJS job.
    *
    * @param workflow - A Mastra workflow instance (or any object with an `execute` method).
@@ -69,27 +93,11 @@ export class MastraAdapter {
    */
   wrapWorkflow(workflow: { name?: string; execute?: (input: unknown) => Promise<unknown> }): DurableWorkflow {
     const jobType = `mastra.workflow.${workflow.name ?? 'unnamed'}`;
-    const serverUrl = this.config.serverUrl;
-    const queue = this.config.defaultQueue;
 
     return {
       jobType,
-      async enqueue(input: Record<string, unknown>): Promise<{ jobId: string }> {
-        const resp = await fetch(`${serverUrl}/api/v1/jobs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: jobType,
-            args: [input],
-            queue,
-          }),
-        });
-        if (!resp.ok) {
-          throw new Error(`OJS enqueue failed: ${resp.status} ${resp.statusText}`);
-        }
-        const data = await resp.json() as { job: { id: string } };
-        return { jobId: data.job.id };
-      },
+      enqueue: (input: Record<string, unknown>): Promise<{ jobId: string }> =>
+        this.enqueueJob(jobType, input),
       handler(): WorkflowHandler {
         return async (args: unknown[]): Promise<unknown> => {
           if (!workflow.execute) {
@@ -109,27 +117,11 @@ export class MastraAdapter {
    */
   wrapAgent(agent: { name?: string; generate?: (input: unknown) => Promise<unknown> }): DurableAgent {
     const jobType = `mastra.agent.${agent.name ?? 'unnamed'}`;
-    const serverUrl = this.config.serverUrl;
-    const queue = this.config.defaultQueue;
 
     return {
       jobType,
-      async enqueue(input: Record<string, unknown>): Promise<{ jobId: string }> {
-        const resp = await fetch(`${serverUrl}/api/v1/jobs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: jobType,
-            args: [input],
-            queue,
-          }),
-        });
-        if (!resp.ok) {
-          throw new Error(`OJS enqueue failed: ${resp.status} ${resp.statusText}`);
-        }
-        const data = await resp.json() as { job: { id: string } };
-        return { jobId: data.job.id };
-      },
+      enqueue: (input: Record<string, unknown>): Promise<{ jobId: string }> =>
+        this.enqueueJob(jobType, input),
       handler(): AgentHandler {
         return async (args: unknown[]): Promise<unknown> => {
           if (!agent.generate) {
