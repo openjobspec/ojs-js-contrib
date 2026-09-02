@@ -1,6 +1,6 @@
 {
   "name": "@openjobspec/js-contrib",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -16,6 +16,6 @@
     "vitest": "^3.2.7"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@openjobspec/nestjs",
-  "version": "0.9.0",
+  "version": "0.5.0",
   "description": "NestJS module for OpenJobSpec",
   "type": "module",
   "main": "dist/index.js",
@@ -48,6 +48,9 @@
     "rxjs": "^7.8.0",
     "typescript": "^5.4.0",
     "vitest": "^3.2.7"
+  },
+  "engines": {
+    "node": ">=22.12"
   },
   "license": "Apache-2.0",
   "publishConfig": {

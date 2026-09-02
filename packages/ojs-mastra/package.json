@@ -1,6 +1,6 @@
 {
   "name": "@openjobspec/mastra",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "Mastra adapter for OpenJobSpec — durable workflows and agents",
   "type": "module",
   "main": "dist/index.js",
