@@ -64,6 +64,9 @@ export class OjsWorkflowService {
           workflowType: 'chain',
         },
       });
+      if (job === null) {
+        throw new Error(`OJS enqueue middleware dropped workflow step "${step.type}"`);
+      }
       resultSteps.push({
         jobId: job.id,
         type: step.type,
@@ -152,6 +155,9 @@ export class OjsWorkflowService {
         batchSize: jobs.length,
       },
     });
+    if (callbackJob === null) {
+      throw new Error(`OJS enqueue middleware dropped workflow callback "${callback.type}"`);
+    }
 
     resultSteps.push({
       jobId: callbackJob.id,

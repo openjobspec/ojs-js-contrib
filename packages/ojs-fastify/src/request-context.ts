@@ -14,7 +14,7 @@ export interface OjsRequestContext {
     type: string,
     args: JsonValue | JsonValue[],
     options?: EnqueueOptions,
-  ): Promise<Job>;
+  ): Promise<Job | null>;
 
   /** Enqueue multiple jobs correlated with this request. */
   enqueueBatch(
@@ -64,7 +64,7 @@ const ojsRequestContextPlugin: FastifyPluginAsync<OjsRequestContextOptions> = as
         type: string,
         args: JsonValue | JsonValue[],
         opts?: EnqueueOptions,
-      ): Promise<Job> {
+      ): Promise<Job | null> {
         const merged: EnqueueOptions = {
           ...opts,
           meta: {

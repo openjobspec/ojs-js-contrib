@@ -78,6 +78,9 @@ export class Queue {
     }
 
     const job = await this.client.enqueue(jobName, [data as JsonValue], enqueueOpts);
+    if (job === null) {
+      throw new Error(`OJS enqueue middleware dropped BullMQ job "${jobName}"`);
+    }
     return { id: job.id, name: jobName, data };
   }
 
@@ -372,4 +375,3 @@ export class Worker {
     }
   }
 }
-
