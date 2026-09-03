@@ -1,6 +1,6 @@
 # @openjobspec/cloudflare
 
-Cloudflare Workers adapter for [OpenJobSpec](https://github.com/openjobspec/openjobspec) -- handles push delivery via fetch events, Cloudflare Queue consumers, KV-based job state caching, and Durable Objects for unique job enforcement.
+Cloudflare Workers adapter for [Open Job Spec](https://github.com/openjobspec/spec) -- handles push delivery via fetch events, Cloudflare Queue consumers, KV-based job state caching, and Durable Objects for unique job enforcement.
 
 ## Installation
 
@@ -195,4 +195,3 @@ Durable Object class for unique job enforcement. Bind in `wrangler.toml` and exp
 ## License
 
 Apache-2.0
-

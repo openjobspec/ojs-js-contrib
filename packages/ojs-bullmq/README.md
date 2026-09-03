@@ -1,6 +1,6 @@
 # @openjobspec/bullmq
 
-BullMQ-compatible adapter for [OpenJobSpec](https://github.com/openjobspec/openjobspec). Drop-in replacements for BullMQ's `Queue` and `Worker` classes, backed by any OJS-compliant server.
+BullMQ-compatible adapter for [Open Job Spec](https://github.com/openjobspec/spec). Drop-in replacements for BullMQ's `Queue` and `Worker` classes, backed by any OJS-compliant server.
 
 ## Install
 

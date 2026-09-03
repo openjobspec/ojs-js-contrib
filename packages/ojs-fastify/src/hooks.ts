@@ -33,7 +33,7 @@ export function createOjsHooks(options?: OjsHooksOptions): FastifyPluginAsync {
 
   const plugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     // Decorate request with job tracking array
-    fastify.decorateRequest('_ojsEnqueuedJobs', null);
+    fastify.decorateRequest('_ojsEnqueuedJobs');
 
     if (correlation) {
       fastify.addHook('onRequest', async (request: FastifyRequest) => {

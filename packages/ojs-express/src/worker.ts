@@ -1,4 +1,4 @@
-import { OJSClient, OJSWorker } from '@openjobspec/sdk';
+import { OJSWorker } from '@openjobspec/sdk';
 import type { OjsWorkerOptions, JobHandlerDefinition, JobContext } from './types.js';
 import type { Request, Response, RequestHandler } from 'express';
 
@@ -9,7 +9,6 @@ import type { Request, Response, RequestHandler } from 'express';
  */
 export class OjsWorkerManager {
   private worker: OJSWorker | null = null;
-  private client: OJSClient;
   private options: OjsWorkerOptions;
   private handlers: Map<string, JobHandlerDefinition> = new Map();
   private running = false;
@@ -18,7 +17,6 @@ export class OjsWorkerManager {
 
   constructor(options: OjsWorkerOptions) {
     this.options = options;
-    this.client = new OJSClient({ url: options.url });
   }
 
   /**

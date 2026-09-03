@@ -100,6 +100,17 @@ describe('createOjsRouteHandlers', () => {
       const data = await res.json();
       expect(data.error).toContain('type');
     });
+
+    it('returns 204 when enqueue middleware drops the job', async () => {
+      mockEnqueue.mockResolvedValueOnce(null);
+      const req = makeRequest('POST', 'http://localhost:3000/api/ojs/jobs', {
+        type: 'email.send',
+        args: [],
+      });
+      const res = await handlers.POST(req);
+      expect(res.status).toBe(204);
+      expect(await res.text()).toBe('');
+    });
   });
 
   describe('POST /api/ojs/jobs/batch', () => {

@@ -5,7 +5,7 @@ A minimal Next.js App Router example demonstrating how to enqueue and track back
 ## Prerequisites
 
 - Docker and Docker Compose
-- Node.js 18+
+- Node.js 20.9+
 
 ## Getting Started
 

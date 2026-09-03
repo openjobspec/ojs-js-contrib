@@ -1,6 +1,6 @@
 {
   "name": "@openjobspec/cloudflare",
-  "version": "0.9.0",
+  "version": "0.5.0",
   "description": "Cloudflare Workers adapter for OpenJobSpec",
   "type": "module",
   "main": "dist/index.js",
@@ -20,15 +20,18 @@
     "lint": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@openjobspec/sdk": "^0.2.0"
+    "@openjobspec/sdk": "^0.5.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240000.0",
     "typescript": "^5.4.0",
-    "vitest": "^2.0.0"
+    "vitest": "^3.2.7"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
 }

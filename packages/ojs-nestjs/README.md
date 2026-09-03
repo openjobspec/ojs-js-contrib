@@ -1,6 +1,6 @@
 # @openjobspec/nestjs
 
-NestJS module for [OpenJobSpec](https://github.com/openjobspec/openjobspec) — a universal, language-agnostic standard for background job processing.
+NestJS module for [Open Job Spec](https://github.com/openjobspec/spec) — a universal, language-agnostic standard for background job processing.
 
 ## Installation
 
@@ -150,4 +150,3 @@ Decorator to mark a method as a job handler.
 ## License
 
 Apache-2.0
-

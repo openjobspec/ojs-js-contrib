@@ -1,6 +1,6 @@
 {
   "name": "@openjobspec/js-contrib",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -8,13 +8,15 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "vitest run",
-    "lint": "tsc --noEmit --project tsconfig.base.json"
+    "lint": "npm run lint --workspaces --if-present",
+    "check:package": "npm run build && node scripts/check-packages.mjs"
   },
   "devDependencies": {
+    "@openjobspec/sdk": "file:vendor/openjobspec-sdk-0.5.0.tgz",
     "typescript": "^5.4.0",
-    "vitest": "^2.0.0"
+    "vitest": "^3.2.7"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12"
   }
 }

@@ -4,7 +4,7 @@ Complete runnable example showing push-based job processing with the OJS Cloudfl
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (`npm i -g wrangler`)
 - An OJS-compatible server (e.g. `ojs-backend-redis`)
 

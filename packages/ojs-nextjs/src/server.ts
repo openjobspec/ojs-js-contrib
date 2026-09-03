@@ -56,7 +56,7 @@ export async function enqueueJob(
   type: string,
   args: JsonValue[],
   options?: EnqueueOptions,
-): Promise<Job> {
+): Promise<Job | null> {
   const client = getOjsClient();
   return client.enqueue(type, args, options);
 }

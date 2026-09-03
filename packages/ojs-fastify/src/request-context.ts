@@ -14,7 +14,7 @@ export interface OjsRequestContext {
     type: string,
     args: JsonValue | JsonValue[],
     options?: EnqueueOptions,
-  ): Promise<Job>;
+  ): Promise<Job | null>;
 
   /** Enqueue multiple jobs correlated with this request. */
   enqueueBatch(
@@ -48,7 +48,7 @@ const ojsRequestContextPlugin: FastifyPluginAsync<OjsRequestContextOptions> = as
   const correlationHeader = options.correlationHeader ?? 'x-correlation-id';
 
   // Decorate request with a placeholder so Fastify knows the shape
-  fastify.decorateRequest('ojsContext', null);
+  fastify.decorateRequest('ojsContext');
 
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
     const client = fastify.ojs;
@@ -64,7 +64,7 @@ const ojsRequestContextPlugin: FastifyPluginAsync<OjsRequestContextOptions> = as
         type: string,
         args: JsonValue | JsonValue[],
         opts?: EnqueueOptions,
-      ): Promise<Job> {
+      ): Promise<Job | null> {
         const merged: EnqueueOptions = {
           ...opts,
           meta: {

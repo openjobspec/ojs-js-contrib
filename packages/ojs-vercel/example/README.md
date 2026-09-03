@@ -4,7 +4,7 @@ Complete runnable example showing push-based job processing with the OJS Vercel 
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - [Vercel CLI](https://vercel.com/docs/cli) (`npm i -g vercel`)
 - An OJS-compatible server (e.g. `ojs-backend-redis`)
 

@@ -91,6 +91,24 @@ function errorResponse(message: string, status: number): Response {
 }
 
 /**
+ * Wraps a route handler so any thrown error is mapped to a `500` JSON
+ * response with the error message. Normal returns (including validation
+ * `400`/`401` and `404` responses) pass through untouched.
+ */
+function withRouteErrorHandling(
+  handler: (request: Request) => Promise<Response>,
+): (request: Request) => Promise<Response> {
+  return async (request: Request): Promise<Response> => {
+    try {
+      return await handler(request);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Internal server error';
+      return errorResponse(message, 500);
+    }
+  };
+}
+
+/**
  * Creates Next.js App Router route handlers for OJS operations.
  *
  * Supports the following routes (relative to the mount point):
@@ -128,30 +146,25 @@ export function createOjsRouteHandlers(options: OjsRouteHandlerOptions = {}): {
    * - `GET /api/ojs/health`     → `{ status: 'ok', ... }`
    * - `GET /api/ojs/jobs/:id`   → Job object
    */
-  async function GET(request: Request): Promise<Response> {
+  const GET = withRouteErrorHandling(async (request: Request): Promise<Response> => {
     const slug = extractSlug(request.url);
 
-    try {
-      // GET /api/ojs/health
-      if (slug[0] === 'health') {
-        const client = resolveClient();
-        const health = await client.health();
-        return jsonResponse(health);
-      }
-
-      // GET /api/ojs/jobs/:id
-      if (slug[0] === 'jobs' && slug[1]) {
-        const client = resolveClient();
-        const job: Job = await client.getJob(slug[1]);
-        return jsonResponse(job);
-      }
-
-      return errorResponse('Not found', 404);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Internal server error';
-      return errorResponse(message, 500);
+    // GET /api/ojs/health
+    if (slug[0] === 'health') {
+      const client = resolveClient();
+      const health = await client.health();
+      return jsonResponse(health);
     }
-  }
+
+    // GET /api/ojs/jobs/:id
+    if (slug[0] === 'jobs' && slug[1]) {
+      const client = resolveClient();
+      const job: Job = await client.getJob(slug[1]);
+      return jsonResponse(job);
+    }
+
+    return errorResponse('Not found', 404);
+  });
 
   /**
    * POST handler: enqueue a job, enqueue a batch, or process a webhook.
@@ -160,90 +173,83 @@ export function createOjsRouteHandlers(options: OjsRouteHandlerOptions = {}): {
    * - `POST /api/ojs/jobs/batch`    → enqueue batch
    * - `POST /api/ojs/webhooks`      → webhook callback
    */
-  async function POST(request: Request): Promise<Response> {
+  const POST = withRouteErrorHandling(async (request: Request): Promise<Response> => {
     const slug = extractSlug(request.url);
 
-    try {
-      // POST /api/ojs/webhooks
-      if (slug[0] === 'webhooks') {
-        const rawBody = await request.text();
+    // POST /api/ojs/webhooks
+    if (slug[0] === 'webhooks') {
+      const rawBody = await request.text();
 
-        if (options.webhookSecret) {
-          const signature = request.headers.get('x-ojs-signature') ?? '';
-          const valid = await validateWebhookSignature(
-            rawBody,
-            signature,
-            options.webhookSecret,
-          );
-          if (!valid) {
-            return errorResponse('Invalid webhook signature', 401);
-          }
-        }
-
-        const event = JSON.parse(rawBody) as OjsWebhookEvent;
-        if (options.onWebhook) {
-          await options.onWebhook(event);
-        }
-        return jsonResponse({ received: true });
-      }
-
-      // POST /api/ojs/jobs/batch
-      if (slug[0] === 'jobs' && slug[1] === 'batch') {
-        const body = (await request.json()) as EnqueueBatchBody;
-        if (!Array.isArray(body.jobs) || body.jobs.length === 0) {
-          return errorResponse('Request body must contain a non-empty "jobs" array', 400);
-        }
-        const client = resolveClient();
-        const jobs: Job[] = await client.enqueueBatch(
-          body.jobs.map((j) => ({
-            type: j.type,
-            args: j.args,
-            ...j.options,
-          })),
+      if (options.webhookSecret) {
+        const signature = request.headers.get('x-ojs-signature') ?? '';
+        const valid = await validateWebhookSignature(
+          rawBody,
+          signature,
+          options.webhookSecret,
         );
-        return jsonResponse(jobs, 201);
-      }
-
-      // POST /api/ojs/jobs
-      if (slug[0] === 'jobs' && !slug[1]) {
-        const body = (await request.json()) as EnqueueJobBody;
-        if (!body.type) {
-          return errorResponse('Missing required field "type"', 400);
+        if (!valid) {
+          return errorResponse('Invalid webhook signature', 401);
         }
-        const client = resolveClient();
-        const job: Job = await client.enqueue(body.type, body.args ?? [], body.options);
-        return jsonResponse(job, 201);
       }
 
-      return errorResponse('Not found', 404);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Internal server error';
-      return errorResponse(message, 500);
+      const event = JSON.parse(rawBody) as OjsWebhookEvent;
+      if (options.onWebhook) {
+        await options.onWebhook(event);
+      }
+      return jsonResponse({ received: true });
     }
-  }
+
+    // POST /api/ojs/jobs/batch
+    if (slug[0] === 'jobs' && slug[1] === 'batch') {
+      const body = (await request.json()) as EnqueueBatchBody;
+      if (!Array.isArray(body.jobs) || body.jobs.length === 0) {
+        return errorResponse('Request body must contain a non-empty "jobs" array', 400);
+      }
+      const client = resolveClient();
+      const jobs: Job[] = await client.enqueueBatch(
+        body.jobs.map((j) => ({
+          type: j.type,
+          args: j.args,
+          ...j.options,
+        })),
+      );
+      return jsonResponse(jobs, 201);
+    }
+
+    // POST /api/ojs/jobs
+    if (slug[0] === 'jobs' && !slug[1]) {
+      const body = (await request.json()) as EnqueueJobBody;
+      if (!body.type) {
+        return errorResponse('Missing required field "type"', 400);
+      }
+      const client = resolveClient();
+      const job = await client.enqueue(body.type, body.args ?? [], body.options);
+      if (job === null) {
+        return new Response(null, { status: 204 });
+      }
+      return jsonResponse(job, 201);
+    }
+
+    return errorResponse('Not found', 404);
+  });
 
   /**
    * DELETE handler: cancel a job.
    *
    * - `DELETE /api/ojs/jobs/:id` → cancelled Job object
    */
-  async function DELETE(request: Request): Promise<Response> {
+  const DELETE = withRouteErrorHandling(async (request: Request): Promise<Response> => {
     const slug = extractSlug(request.url);
 
-    try {
-      // DELETE /api/ojs/jobs/:id
-      if (slug[0] === 'jobs' && slug[1]) {
-        const client = resolveClient();
-        const job: Job = await client.cancelJob(slug[1]);
-        return jsonResponse(job);
-      }
-
-      return errorResponse('Not found', 404);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Internal server error';
-      return errorResponse(message, 500);
+    // DELETE /api/ojs/jobs/:id
+    if (slug[0] === 'jobs' && slug[1]) {
+      const client = resolveClient();
+      const job: Job = await client.cancelJob(slug[1]);
+      return jsonResponse(job);
     }
-  }
+
+    return errorResponse('Not found', 404);
+  });
 
   return { GET, POST, DELETE };
 }

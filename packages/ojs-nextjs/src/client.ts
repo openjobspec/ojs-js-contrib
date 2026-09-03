@@ -16,6 +16,15 @@ export interface UseJobStatusOptions {
 
 const TERMINAL_STATES = ['completed', 'cancelled', 'discarded'];
 
+/**
+ * Returns `true` when a job `state` is terminal — i.e. polling should stop
+ * because the job will not change further (`completed`, `cancelled`, or
+ * `discarded`).
+ */
+export function isTerminalState(state: string): boolean {
+  return TERMINAL_STATES.includes(state);
+}
+
 export function useJobStatus(
   jobId: string | null,
   apiEndpoint: string,
@@ -34,11 +43,11 @@ export function useJobStatus(
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
-      const data: JobStatus = await res.json();
+      const data = (await res.json()) as JobStatus;
       setStatus(data);
       setError(null);
 
-      if (TERMINAL_STATES.includes(data.state)) {
+      if (isTerminalState(data.state)) {
         if (data.state === 'completed') onComplete?.(data);
         if (data.state === 'discarded') onError?.(data);
         setIsPolling(false);

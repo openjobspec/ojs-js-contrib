@@ -168,22 +168,14 @@ export class OjsVercelHandler {
       });
   }
 
-  // ─── API Route Handler (Next.js Pages Router / Node runtime) ─────────────
-
   /**
-   * Returns a handler for Next.js API routes (Pages Router).
-   * The returned function uses the Web API Request/Response types
-   * compatible with Next.js 13+ App Router API routes.
-   *
-   * @example
-   * ```ts
-   * // app/api/ojs/route.ts
-   * const ojs = new OjsVercelHandler({ ojsUrl: process.env.OJS_URL! });
-   * ojs.register('email.send', handleEmail);
-   * export const POST = ojs.apiRouteHandler();
-   * ```
+   * Shared request pipeline for both the API-route and Edge handlers: reject
+   * non-POST, parse the delivery body, build the request context for the given
+   * trigger, and always respond `200` with the push-delivery result.
    */
-  apiRouteHandler(): (request: Request) => Promise<Response> {
+  private makeHandler(
+    trigger: 'api_route' | 'edge',
+  ): (request: Request) => Promise<Response> {
     return async (request: Request): Promise<Response> => {
       if (request.method !== 'POST') {
         return jsonResponse(405, {
@@ -204,14 +196,33 @@ export class OjsVercelHandler {
 
       const ctx: OjsRequestContext = {
         request,
-        trigger: 'api_route',
+        trigger,
         kv: this.config.kv,
         signal: request.signal,
       };
 
       const result = await this.processRequest(body, ctx);
-      return jsonResponse(result.status === 'completed' ? 200 : 200, result);
+      return jsonResponse(200, result);
     };
+  }
+
+  // ─── API Route Handler (Next.js Pages Router / Node runtime) ─────────────
+
+  /**
+   * Returns a handler for Next.js API routes (Pages Router).
+   * The returned function uses the Web API Request/Response types
+   * compatible with Next.js 13+ App Router API routes.
+   *
+   * @example
+   * ```ts
+   * // app/api/ojs/route.ts
+   * const ojs = new OjsVercelHandler({ ojsUrl: process.env.OJS_URL! });
+   * ojs.register('email.send', handleEmail);
+   * export const POST = ojs.apiRouteHandler();
+   * ```
+   */
+  apiRouteHandler(): (request: Request) => Promise<Response> {
+    return this.makeHandler('api_route');
   }
 
   // ─── Edge Function Handler ───────────────────────────────────────────────
@@ -230,34 +241,7 @@ export class OjsVercelHandler {
    * ```
    */
   edgeHandler(): (request: Request) => Promise<Response> {
-    return async (request: Request): Promise<Response> => {
-      if (request.method !== 'POST') {
-        return jsonResponse(405, {
-          status: 'failed',
-          error: { code: 'method_not_allowed', message: 'only POST is accepted', retryable: false },
-        });
-      }
-
-      let body: PushDeliveryRequest;
-      try {
-        body = (await request.json()) as PushDeliveryRequest;
-      } catch {
-        return jsonResponse(400, {
-          status: 'failed',
-          error: { code: 'invalid_request', message: 'failed to parse request body', retryable: false },
-        });
-      }
-
-      const ctx: OjsRequestContext = {
-        request,
-        trigger: 'edge',
-        kv: this.config.kv,
-        signal: request.signal,
-      };
-
-      const result = await this.processRequest(body, ctx);
-      return jsonResponse(200, result);
-    };
+    return this.makeHandler('edge');
   }
 
   // ─── Background Enqueueing ─────────────────────────────────────────────
@@ -313,6 +297,23 @@ export class OjsVercelHandler {
 // ─── Convenience factory functions ───────────────────────────────────────────
 
 /**
+ * Register a config's `handlers` map and optional `defaultHandler` on a
+ * handler instance. Shared by {@link ojsApiRoute} and {@link ojsEdgeHandler}.
+ */
+function applyHandlers(
+  ojs: OjsVercelHandler,
+  config: { handlers: Record<string, JobHandler>; defaultHandler?: JobHandler },
+): OjsVercelHandler {
+  for (const [type, handler] of Object.entries(config.handlers)) {
+    ojs.register(type, handler);
+  }
+  if (config.defaultHandler) {
+    ojs.registerDefault(config.defaultHandler);
+  }
+  return ojs;
+}
+
+/**
  * Create a Next.js API route handler for OJS push delivery.
  *
  * @example
@@ -328,14 +329,7 @@ export function ojsApiRoute(config: OjsVercelConfig & {
   handlers: Record<string, JobHandler>;
   defaultHandler?: JobHandler;
 }): (request: Request) => Promise<Response> {
-  const ojs = new OjsVercelHandler(config);
-  for (const [type, handler] of Object.entries(config.handlers)) {
-    ojs.register(type, handler);
-  }
-  if (config.defaultHandler) {
-    ojs.registerDefault(config.defaultHandler);
-  }
-  return ojs.apiRouteHandler();
+  return applyHandlers(new OjsVercelHandler(config), config).apiRouteHandler();
 }
 
 /**
@@ -355,14 +349,7 @@ export function ojsEdgeHandler(config: OjsVercelConfig & {
   handlers: Record<string, JobHandler>;
   defaultHandler?: JobHandler;
 }): (request: Request) => Promise<Response> {
-  const ojs = new OjsVercelHandler(config);
-  for (const [type, handler] of Object.entries(config.handlers)) {
-    ojs.register(type, handler);
-  }
-  if (config.defaultHandler) {
-    ojs.registerDefault(config.defaultHandler);
-  }
-  return ojs.edgeHandler();
+  return applyHandlers(new OjsVercelHandler(config), config).edgeHandler();
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ A complete NestJS application demonstrating `@openjobspec/nestjs` integration.
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22.12+
 - Docker & Docker Compose (for the OJS server)
 
 ## Setup
@@ -44,4 +44,3 @@ npm start
 ```
 
 The NestJS app uses `OjsService.client` to enqueue jobs and `OjsService.worker` to process them, both communicating with the OJS server over HTTP.
-

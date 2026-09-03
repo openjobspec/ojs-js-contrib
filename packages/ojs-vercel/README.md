@@ -1,6 +1,6 @@
 # @openjobspec/vercel
 
-Vercel Edge and Serverless adapter for [OpenJobSpec](https://github.com/openjobspec/openjobspec) -- provides Next.js API route handlers, Edge Function handlers, background job enqueueing, and optional Vercel KV caching.
+Vercel Edge and Serverless adapter for [Open Job Spec](https://github.com/openjobspec/spec) -- provides Next.js API route handlers, Edge Function handlers, background job enqueueing, and optional Vercel KV caching.
 
 ## Installation
 
