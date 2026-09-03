@@ -4,8 +4,10 @@ Thank you for your interest in contributing to the Open Job Spec JavaScript/Type
 
 ## Development Setup
 
+The coordinated 0.5 workspace requires Node.js 22.12 or later.
+
 1. Fork and clone the repository
-2. Install dependencies: `npm install`
+2. Install locked dependencies: `npm ci`
 3. Build all packages: `npm run build`
 4. Run tests: `npm test`
 

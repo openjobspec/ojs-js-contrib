@@ -1,6 +1,6 @@
 # @openjobspec/fastify
 
-Fastify plugin for [OpenJobSpec](https://github.com/openjobspec/openjobspec) — a universal, language-agnostic standard for background job processing.
+Fastify plugin for [Open Job Spec](https://github.com/openjobspec/spec) — a universal, language-agnostic standard for background job processing.
 
 ## Installation
 

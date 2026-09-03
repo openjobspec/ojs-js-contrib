@@ -1,6 +1,6 @@
 # @openjobspec/express
 
-Express.js middleware for [OpenJobSpec](https://github.com/openjobspec/openjobspec) — attach an OJS client to every request and handle job-related errors automatically.
+Express.js middleware for [Open Job Spec](https://github.com/openjobspec/spec) — attach an OJS client to every request and handle job-related errors automatically.
 
 ## Installation
 

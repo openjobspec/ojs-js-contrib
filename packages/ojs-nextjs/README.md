@@ -1,6 +1,6 @@
 # @openjobspec/nextjs
 
-Next.js helpers for [OpenJobSpec](https://github.com/openjobspec/openjobspec) — a universal, language-agnostic standard for background job processing.
+Next.js helpers for [Open Job Spec](https://github.com/openjobspec/spec) — a universal, language-agnostic standard for background job processing.
 
 ## Installation
 

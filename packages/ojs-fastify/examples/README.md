@@ -4,7 +4,7 @@ A complete example showing how to use the `@openjobspec/fastify` plugin with a F
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20.9+
 - Docker & Docker Compose
 
 ## Setup
