@@ -7,11 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-02
+
+### Changed
+
+- **Breaking:** all framework packages now target `@openjobspec/sdk ^0.5.0`
+  and handle the SDK's nullable single-enqueue result explicitly.
+- **Breaking:** the Next.js and Vercel adapters now require Next.js 16.3.4 or
+  later; the NestJS adapter now requires NestJS 12 and Node.js 22.12 or later.
+- **Breaking:** the Fastify adapter now requires Fastify 5.12.1 or later.
+- **Breaking:** the Express adapter now requires Express 5.2.1 or later.
+- Updated Fastify development compatibility and moved the
+  workspace test toolchain to the secure Vitest 3.2 line.
+- Aligned all eight publishable package versions to the coordinated 0.5.0
+  release and added package-level publish dry runs.
+- Pinned the coordinated SDK package fixture by SHA-256 and npm SHA-512
+  integrity; cold-cache installs and package checks reject stale tarballs.
+
 ## [0.4.0] - 2026-04-20
 
-## [0.9.0] - 2026-02-20
-
-Release candidate for v1.0. All packages stabilized with comprehensive test suites and TypeScript strict mode.
+All packages stabilized with comprehensive test suites and TypeScript strict mode.
 
 ### Added
 
